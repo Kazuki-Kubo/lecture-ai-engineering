@@ -173,7 +173,10 @@ def test_model_reproducibility(sample_data, preprocessor):
         predictions1, predictions2
     ), "モデルの予測結果に再現性がありません"
 
-@pytest.mark.skipif(not os.path.exists(PREVIOUS_MODEL_PATH), reason="過去のモデルが存在しません")
+
+@pytest.mark.skipif(
+    not os.path.exists(PREVIOUS_MODEL_PATH), reason="過去のモデルが存在しません"
+)
 def test_model_accuracy_vs_previous(train_model):
     """過去モデルと比較して精度が劣化していないかを検証"""
     current_model, X_test, y_test = train_model
