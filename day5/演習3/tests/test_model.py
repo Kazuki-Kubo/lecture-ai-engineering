@@ -16,6 +16,7 @@ from sklearn.pipeline import Pipeline
 DATA_PATH = os.path.join(os.path.dirname(__file__), "../data/Titanic.csv")
 MODEL_DIR = os.path.join(os.path.dirname(__file__), "../models")
 MODEL_PATH = os.path.join(MODEL_DIR, "titanic_model.pkl")
+PREVIOUS_MODEL_PATH = os.path.join(MODEL_DIR, "previous_titanic_model.pkl")
 
 
 @pytest.fixture
@@ -171,3 +172,22 @@ def test_model_reproducibility(sample_data, preprocessor):
     assert np.array_equal(
         predictions1, predictions2
     ), "モデルの予測結果に再現性がありません"
+
+@pytest.mark.skipif(not os.path.exists(PREVIOUS_MODEL_PATH), reason="過去のモデルが存在しません")
+def test_model_accuracy_vs_previous(train_model):
+    """過去モデルと比較して精度が劣化していないかを検証"""
+    current_model, X_test, y_test = train_model
+
+    # 過去モデルの読み込み
+    with open(PREVIOUS_MODEL_PATH, "rb") as f:
+        previous_model = pickle.load(f)
+
+    # 精度の比較
+    current_accuracy = accuracy_score(y_test, current_model.predict(X_test))
+    previous_accuracy = accuracy_score(y_test, previous_model.predict(X_test))
+
+    # 劣化していないか検証（例えば1%以下の精度低下は許容）
+    assert current_accuracy >= previous_accuracy - 0.01, (
+        f"精度が過去モデルより劣化しています: "
+        f"current={current_accuracy:.3f}, previous={previous_accuracy:.3f}"
+    )
